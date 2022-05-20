@@ -4,19 +4,14 @@ import mm1
 import numpy as np
 import copy
 
-def pde_explicit(L, delx, delt,funx, time):
-    # u matrix
+def explicitPDE(u, L, delx, delt, time):
+
     n = int(L/delx)+1
-    u0 = [0 for i in range(n)]
-    #print(u0)
-    u0[-1]= funx(L)
-    u0[0] = funx(0)
-    for i in range(len(u0)):
-        u0[i]=funx(i*delx)
-    #A matrix
-    print(u0)
+    k=0.1
+    alpha = k*delt/(delx**2)
+    
     A = mm1.zeromatrix(n,n)
-    alpha = delt/(delx**2)
+    
     for i in range(len(A)):
         for j in range(len(A[i])):
             if i == j:
@@ -26,25 +21,42 @@ def pde_explicit(L, delx, delt,funx, time):
     #print(A)
     i = 1
     while i*delt < time:
-        unew = mm1.mat_vec_mult(A,u0)
-        u0 = copy.deepcopy(unew)
+        temp = mm1.mat_vec_mult(A,u)
+        u = copy.deepcopy(temp)
         i = i+1
-        #print(i)
-    return u0
+        u[0]=0
+        u[-1]=0
+    return u
 
 def func(x):
     return 20*abs(m.sin(m.pi*x))
-x=[0.1*i for i in range(21)]
-data=pde_explicit(2,0.1,0.0008,func,20)
-print(data)
-# u0=[]
-# for i in range(len(x)):
-#     u0.append(func(x[i]))
-# time=[0,10,20,50,100,200,500]
-# for i in range(len(time)):
-#     data=pde_explicit(2,0.1,0.0008,func,time[i])
-#     data=mm1.transpose(data)
-#     plt.plot(x,data[0],label=str(time[i]))
-# plt.plot(x,data[0])
-# plt.plot(x,u0)
-#plt.show()
+
+del_t = 0.008
+del_x = 0.1
+L = 2
+n = n = int(L/del_x)+1
+steps = [0,10,20,50,100,200,500]
+time = [del_t*steps[i] for i in range(len(steps))]
+
+
+#x-axis
+x=[del_x*i for i in range(n)]
+
+#define u matrix(initial conditions)
+u = [0 for i in range(n)]
+for i in range(len(u)):
+    u[i]=func(x[i])
+
+for i in range(len(time)):
+    u1 = explicitPDE(u, L, del_x, del_t, time[i])
+    plt.plot(x,u1,label='Time ='+str(steps[i]))
+
+plt.xlabel("X-axis (unit length)")
+plt.ylabel("Temperature($^o$C)")
+plt.grid()
+plt.legend()
+plt.show()
+
+"""
+At time = 0, the temperature is plot has 2 peaks equally spaced in the plot which means that temperature is high at 2 points in the rod and gradually as time goes places where maxima was there it begins to cool down by transferring heat to the neighbour position where temperature is less, i.e., at the center. That's why we are getting an increasing temperature at the centre as time goes.
+"""
